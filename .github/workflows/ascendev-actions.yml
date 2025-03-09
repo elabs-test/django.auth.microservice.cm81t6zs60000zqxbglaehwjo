@@ -1,0 +1,48 @@
+name: Run Django Tests
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    timeout-minutes: 10
+    name: Run Django Tests
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRESQL_DB_NAME }}
+          POSTGRES_USER: ${{ secrets.POSTGRESQL_DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRESQL_DB_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Check out project
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Run custom action
+        env:
+          DEBUG: 1
+          DB_NAME: ${{ secrets.POSTGRESQL_DB_NAME }}
+          DB_USER: ${{ secrets.POSTGRESQL_DB_USER }}
+          DB_PASSWORD: ${{ secrets.POSTGRESQL_DB_PASSWORD }}
+          DB_HOST: ${{ secrets.POSTGRESQL_DB_HOST }}
+          DB_PORT: ${{ secrets.POSTGRESQL_DB_PORT }}
+          SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        uses: tamerlantian01/docker-action-test@v2.0.2
+        with:
+          base-url: ${{ secrets.BASE_URL }}
