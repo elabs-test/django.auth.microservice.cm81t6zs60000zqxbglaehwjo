@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from users.utils import validate_password
 
 class RegisterSerializer(serializers.ModelSerializer):
     class Meta:
@@ -10,6 +11,14 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user
+
+    def validate(self, data):
+        """Validar todos los campos del formulario, incluyendo la contraseña."""
+        password = data.get('password')
+        errors = validate_password(password)
+        if errors:
+            raise serializers.ValidationError({"password": errors})
+        return data
 
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
