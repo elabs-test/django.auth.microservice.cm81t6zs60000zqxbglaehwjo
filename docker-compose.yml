@@ -1,0 +1,42 @@
+
+services:
+  # Servicio de Django
+  web:
+    build:
+      context: .
+    container_name: django_auth_service
+    command: >
+      bash -c "
+        python manage.py migrate --noinput &&
+        # Arrancar el servidor de Django
+        python manage.py runserver 0.0.0.0:8000
+      "
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - .env
+
+  # Servicio de base de datos (Postgres)
+  db:
+    image: postgres:15
+    container_name: postgres_auth_service
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+
+# Definir volumen persistente para Postgres
+volumes:
+  postgres_data:
+
+
+
